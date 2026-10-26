@@ -247,6 +247,16 @@ section { padding-block: clamp(48px, 8vw, 96px) 0; }
 .stack h3 { font-size: 1.05rem; font-weight: 700; }
 .stack .group p { color: var(--muted); font-size: .88rem; }
 
+/* ── Certificações ── */
+.certs { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 14px; }
+.cert {
+  display: grid; gap: 8px; align-content: start; padding: 18px; border: 1px solid var(--line);
+  border-radius: var(--radius); background: var(--surface); min-width: 0;
+}
+.cert b { font-family: var(--font-display); font-size: 1.05rem; line-height: 1.25; }
+.cert .meta { font: .75rem var(--font-mono); color: var(--muted); }
+.cert a { font-size: .9rem; }
+
 /* ── Contato ── */
 .contact {
   border: 1px solid var(--line); border-radius: var(--radius); padding: clamp(24px, 5vw, 56px);
@@ -517,6 +527,16 @@ footer { margin-top: 40px; color: var(--muted); font: .78rem var(--font-mono); d
     </div>
   </section>
 
+  <section id="certificacoes" hidden>
+    <div class="sechead">
+      <div>
+        <div class="eyebrow">Certificações</div>
+        <h2>Aprendizado contínuo</h2>
+      </div>
+    </div>
+    <div class="certs" id="certs"></div>
+  </section>
+
   <section id="contato">
     <div class="contact">
       <div class="eyebrow">Contato</div>
@@ -722,6 +742,36 @@ footer { margin-top: 40px; color: var(--muted); font: .78rem var(--font-mono); d
     };
     render(script); setTimeout(() => { done = []; tick(); }, 2500);
   }
+
+  /* ── Certificações (certificados.json, exportado pelo CursoTracker) ── */
+  const isHttp = (u) => { try { return ["http:", "https:"].includes(new URL(u).protocol); } catch { return false; } };
+  fetch("certificados.json", { cache: "no-cache" })
+    .then((r) => (r.ok ? r.json() : []))
+    .then((list) => {
+      if (!Array.isArray(list) || list.length === 0) return;
+      const box = document.getElementById("certs");
+      list.forEach((c) => {
+        if (!c || typeof c.name !== "string") return;
+        const card = document.createElement("article");
+        card.className = "cert";
+        const name = document.createElement("b");
+        name.textContent = c.name;
+        const meta = document.createElement("span");
+        meta.className = "meta";
+        const when = c.completedAt ? new Date(c.completedAt + "T12:00:00").toLocaleDateString("pt-BR", { month: "short", year: "numeric" }) : "";
+        meta.textContent = [c.platform, c.area, when].filter(Boolean).join(" · ");
+        card.append(name, meta);
+        if (c.certificateUrl && isHttp(c.certificateUrl)) {
+          const link = document.createElement("a");
+          link.href = c.certificateUrl; link.target = "_blank"; link.rel = "noopener";
+          link.textContent = "Ver certificado ↗";
+          card.append(link);
+        }
+        box.append(card);
+      });
+      if (box.children.length) document.getElementById("certificacoes").hidden = false;
+    })
+    .catch(() => {});
 
   /* ── Copiar e-mail ── */
   const copyBtn = document.getElementById("copyEmail");
